@@ -1,0 +1,95 @@
+import { financialData, ratioData, newsData } from '../data/financialData';
+import ReactEChartsCore from 'echarts-for-react/lib/core';
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([BarChart, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+
+const years = financialData.map(d => d.year);
+const revData = financialData.map(d => d.revenue);
+const profitData = financialData.map(d => d.netProfit);
+
+const revenueOption = {
+  tooltip: { trigger: 'axis' as const },
+  legend: { data: ['营业收入(亿元)', '归母净利润(亿元)'] },
+  grid: { left: '8%', right: '8%', bottom: '10%', containLabel: true },
+  xAxis: { type: 'category' as const, data: years, axisLabel: { fontSize: 12 } },
+  yAxis: [{ type: 'value' as const, name: '亿元', nameTextStyle: { fontSize: 11 } }],
+  series: [
+    { name: '营业收入(亿元)', type: 'bar' as const, data: revData, itemStyle: { color: '#1a6b3c' }, barWidth: '32%' },
+    { name: '归母净利润(亿元)', type: 'bar' as const, data: profitData, itemStyle: { color: '#d97706' }, barWidth: '32%' },
+  ],
+};
+
+const growthOption = {
+  tooltip: { trigger: 'axis' as const },
+  legend: { data: ['营收增长率(%)', '净利润增长率(%)'] },
+  grid: { left: '8%', right: '8%', bottom: '10%', containLabel: true },
+  xAxis: { type: 'category' as const, data: years, axisLabel: { fontSize: 12 } },
+  yAxis: [{ type: 'value' as const, name: '%', axisLabel: { formatter: '{value}%' } }],
+  series: [
+    { name: '营收增长率(%)', type: 'line' as const, data: ratioData.map(d => d.revenueGrowth), smooth: true, lineStyle: { color: '#1a6b3c', width: 3 }, itemStyle: { color: '#1a6b3c' }, symbolSize: 8 },
+    { name: '净利润增长率(%)', type: 'line' as const, data: ratioData.map(d => d.profitGrowth), smooth: true, lineStyle: { color: '#d97706', width: 3 }, itemStyle: { color: '#d97706' }, symbolSize: 8 },
+  ],
+};
+
+const latest = financialData[financialData.length - 1];
+const prev = financialData[financialData.length - 2];
+const revGrowth = ((latest.revenue / prev.revenue - 1) * 100).toFixed(1);
+
+export default function Home() {
+  return (
+    <>
+      <section className="hero-section">
+        <div className="hero-inner">
+          <p className="hero-subtitle" style={{ fontSize: 14, opacity: 0.7, marginBottom: 4 }}>300274.SZ</p>
+          <h1 className="hero-title">阳光电源股份有限公司</h1>
+          <p className="hero-subtitle">Sungrow Power Supply Co., Ltd.</p>
+          <div className="hero-stats">
+            <div className="hero-stat"><div className="hero-stat-value">{latest.revenue.toFixed(1)}亿</div><div className="hero-stat-label">2023营业收入</div></div>
+            <div className="hero-stat"><div className="hero-stat-value">{latest.netProfit.toFixed(1)}亿</div><div className="hero-stat-label">2023归母净利润</div></div>
+            <div className="hero-stat"><div className="hero-stat-value" style={{ color: '#fbbf24' }}>{revGrowth}%</div><div className="hero-stat-label">营收同比增长</div></div>
+            <div className="hero-stat"><div className="hero-stat-value">{ratioData[4].roe.toFixed(1)}%</div><div className="hero-stat-label">ROE</div></div>
+          </div>
+        </div>
+      </section>
+
+      <div className="page-shell">
+        <div className="card-grid">
+          <div className="card"><div className="card-title">📊 总市值</div><div className="card-value">~1580亿</div><div className="card-sub">截至最新交易日</div></div>
+          <div className="card"><div className="card-title">💰 市盈率 (PE-TTM)</div><div className="card-value">~16.74</div><div className="card-sub">低于行业平均水平</div></div>
+          <div className="card"><div className="card-title">🏭 所属行业</div><div className="card-value">电力设备</div><div className="card-sub">光伏逆变器 / 储能</div></div>
+          <div className="card"><div className="card-title">👥 员工人数</div><div className="card-value">~18,000+</div><div className="card-sub">研发占比 &gt;30%</div></div>
+        </div>
+
+        <div className="chart-container">
+          <h3 className="chart-title">营业收入与净利润趋势 (2019-2023)</h3>
+          <ReactEChartsCore echarts={echarts} option={revenueOption} style={{ height: 360 }} notMerge />
+        </div>
+
+        <div className="chart-container">
+          <h3 className="chart-title">营收与净利润增长率</h3>
+          <ReactEChartsCore echarts={echarts} option={growthOption} style={{ height: 340 }} notMerge />
+        </div>
+
+        <h3 className="section-title">最新动态</h3>
+        <div className="news-list">
+          {newsData.slice(0, 5).map((item, i) => (
+            <div key={i} className="news-item">
+              <span className="news-date">{item.date}</span>
+              <div className="news-content">
+                <div className="news-title">
+                  {item.title}
+                  <span className={`badge badge-${item.category} news-category`}>{item.category}</span>
+                </div>
+                <p className="news-summary">{item.summary}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}

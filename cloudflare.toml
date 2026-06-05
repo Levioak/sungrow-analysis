@@ -1,0 +1,28 @@
+/* Cloudflare Pages 部署配置 */
+name: sungrow-analysis
+output_dir: dist
+
+build:
+  command: npm run build
+  environment:
+    NODE_VERSION: "18"
+
+routes:
+  - pattern: /assets/*
+    zone: assets
+  - pattern: /*
+    zone: app
+
+headers:
+  - pattern: /assets/*
+    key: Cache-Control
+    value: public, max-age=31536000, immutable
+  - pattern: /*
+    key: X-Frame-Options
+    value: DENY
+  - pattern: /*
+    key: X-Content-Type-Options
+    value: nosniff
+  - pattern: /*
+    key: Referrer-Policy
+    value: strict-origin-when-cross-origin

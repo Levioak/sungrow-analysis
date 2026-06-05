@@ -1,0 +1,91 @@
+import { financialData } from '../data/financialData';
+import ReactEChartsCore from 'echarts-for-react/lib/core';
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+echarts.use([BarChart, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+
+const cashFlowOpt = {
+  tooltip: { trigger: 'axis' as const },
+  legend: { data: ['经营活动现金流', '投资活动现金流', '筹资活动现金流'] },
+  grid: { left: '8%', right: '8%', bottom: '10%' },
+  xAxis: { type: 'category' as const, data: financialData.map(d => d.year) },
+  yAxis: { type: 'value' as const, name: '亿元' },
+  series: [
+    { name: '经营活动现金流', type: 'bar' as const, data: financialData.map(d => d.operatingCF), itemStyle: { color: '#22c55e' } },
+    { name: '投资活动现金流', type: 'bar' as const, data: financialData.map(d => d.investingCF), itemStyle: { color: '#ef4444' } },
+    { name: '筹资活动现金流', type: 'bar' as const, data: financialData.map(d => d.financingCF), itemStyle: { color: '#3b82f6' } },
+  ],
+};
+
+const expenseOpt = {
+  tooltip: { trigger: 'axis' as const },
+  legend: { data: ['销售费用', '管理费用', '研发费用'] },
+  grid: { left: '8%', right: '8%', bottom: '10%' },
+  xAxis: { type: 'category' as const, data: financialData.map(d => d.year) },
+  yAxis: { type: 'value' as const, name: '亿元' },
+  series: [
+    { name: '销售费用', type: 'line' as const, data: financialData.map(d => d.sgExpense), smooth: true, lineStyle: { color: '#f59e0b', width: 2 }, symbolSize: 6 },
+    { name: '管理费用', type: 'line' as const, data: financialData.map(d => d.adminExpense), smooth: true, lineStyle: { color: '#3b82f6', width: 2 }, symbolSize: 6 },
+    { name: '研发费用', type: 'line' as const, data: financialData.map(d => d.rndExpense), smooth: true, lineStyle: { color: '#22c55e', width: 2 }, symbolSize: 6 },
+  ],
+};
+
+export default function Financials() {
+  return (
+    <div className="page-shell">
+      <div className="page-header">
+        <p className="page-eyebrow">Financial Statements</p>
+        <h1 className="page-title">财务报告分析</h1>
+        <p className="page-desc">基于 2019-2023 年财报数据，全面呈现营收、利润、资产负债及现金流趋势。</p>
+      </div>
+
+      <div className="card-grid">
+        <div className="card"><div className="card-title">📈 2023年营收</div><div className="card-value up">{financialData[4].revenue}亿</div><div className="card-sub">同比增长 {((financialData[4].revenue/financialData[3].revenue-1)*100).toFixed(1)}%</div></div>
+        <div className="card"><div className="card-title">💰 2023年净利润</div><div className="card-value up">{financialData[4].netProfit}亿</div><div className="card-sub">同比增长 {((financialData[4].netProfit/financialData[3].netProfit-1)*100).toFixed(1)}%</div></div>
+        <div className="card"><div className="card-title">🏛️ 总资产</div><div className="card-value">{financialData[4].totalAssets}亿</div><div className="card-sub">五年复合增长 34.7%</div></div>
+        <div className="card"><div className="card-title">💵 经营现金流</div><div className="card-value up">{financialData[4].operatingCF}亿</div><div className="card-sub">现金流质量显著改善</div></div>
+      </div>
+
+      <div className="chart-container"><h3 className="chart-title">现金流结构分析</h3><ReactEChartsCore echarts={echarts} option={cashFlowOpt} style={{ height: 360 }} notMerge /></div>
+      <div className="chart-container"><h3 className="chart-title">三项费用趋势</h3><ReactEChartsCore echarts={echarts} option={expenseOpt} style={{ height: 340 }} notMerge /></div>
+
+      <div className="table-container">
+        <h3 className="chart-title">利润表 (亿元)</h3>
+        <table className="data-table">
+          <thead><tr><th>项目</th>{financialData.map(d => <th key={d.year}>{d.year}</th>)}</tr></thead>
+          <tbody>
+            {[{ l: '营业收入', d: financialData.map(d => d.revenue) },{ l: '营业成本', d: financialData.map(d => d.cost) },{ l: '毛利润', d: financialData.map(d => d.grossProfit) },{ l: '销售费用', d: financialData.map(d => d.sgExpense) },{ l: '管理费用', d: financialData.map(d => d.adminExpense) },{ l: '研发费用', d: financialData.map(d => d.rndExpense) },{ l: '营业利润', d: financialData.map(d => d.operatingProfit) },{ l: '归母净利润', d: financialData.map(d => d.netProfit) }].map(r => (
+              <tr key={r.l}><td>{r.l}</td>{r.d.map((v,i) => <td key={i}>{v.toFixed(2)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="table-container">
+        <h3 className="chart-title">资产负债表 (亿元)</h3>
+        <table className="data-table">
+          <thead><tr><th>项目</th>{financialData.map(d => <th key={d.year}>{d.year}</th>)}</tr></thead>
+          <tbody>
+            {[{ l: '总资产', d: financialData.map(d => d.totalAssets) },{ l: '总负债', d: financialData.map(d => d.totalLiabilities) },{ l: '归母权益', d: financialData.map(d => d.equity) },{ l: '货币资金', d: financialData.map(d => d.cashEquivalents) },{ l: '应收账款', d: financialData.map(d => d.accountsReceivable) },{ l: '存货', d: financialData.map(d => d.inventory) },{ l: '应付账款', d: financialData.map(d => d.accountsPayable) },{ l: '固定资产', d: financialData.map(d => d.fixedAssets) }].map(r => (
+              <tr key={r.l}><td>{r.l}</td>{r.d.map((v,i) => <td key={i}>{v.toFixed(2)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="table-container">
+        <h3 className="chart-title">现金流量表 (亿元)</h3>
+        <table className="data-table">
+          <thead><tr><th>项目</th>{financialData.map(d => <th key={d.year}>{d.year}</th>)}</tr></thead>
+          <tbody>
+            {[{ l: '经营活动现金流', d: financialData.map(d => d.operatingCF) },{ l: '投资活动现金流', d: financialData.map(d => d.investingCF) },{ l: '筹资活动现金流', d: financialData.map(d => d.financingCF) }].map(r => (
+              <tr key={r.l}><td>{r.l}</td>{r.d.map((v,i) => <td key={i}>{v.toFixed(2)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
